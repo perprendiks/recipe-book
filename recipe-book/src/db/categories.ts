@@ -13,8 +13,8 @@ export async function getCategories(): Promise<Category[]> {
 export async function seedCategories(): Promise<void> {
   const count = await db.categories.count()
   if (count > 0) return
-  await db.categories.bulkAdd(
-    DEFAULT_CATEGORIES.map((name, i) => ({ id: crypto.randomUUID(), name, order: i })),
+  await db.categories.bulkPut(
+    DEFAULT_CATEGORIES.map((name, i) => ({ id: `default-${i}`, name, order: i })),
   )
 }
 
