@@ -28,3 +28,31 @@ test('импорт некорректного JSON файла показывае
   await screen.findByText(/Ошибка/)
   expect(await getAllRecipes()).toHaveLength(0)
 })
+
+test('с чекбоксом "Заменить" импорт заменяет существующие рецепты', async () => {
+  const { addRecipe } = await import('../db/recipes')
+  await addRecipe({
+    title: 'Старый рецепт', category: 'Супы', tags: [], ingredients: [], steps: [],
+    rating: 0, timeMinutes: null, servings: null, notes: '', isFavorite: false,
+  })
+  expect(await getAllRecipes()).toHaveLength(1)
+
+  const backup = {
+    version: 1, exportedAt: Date.now(),
+    recipes: [{ id: 'new-1', title: 'Новый рецепт', category: 'Салаты', tags: [], ingredients: [], steps: [], rating: 0, timeMinutes: null, servings: null, notes: '', isFavorite: false, createdAt: 1, updatedAt: 1 }],
+    categories: [],
+  }
+
+  render(<MemoryRouter><SettingsPage /></MemoryRouter>)
+  const checkbox = screen.getByLabelText('Заменить всю коллекцию')
+  await userEvent.click(checkbox)
+
+  const file = new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' })
+  await userEvent.upload(screen.getByLabelText('Загрузить файл бэкапа'), file)
+
+  await waitFor(async () => {
+    const all = await getAllRecipes()
+    expect(all).toHaveLength(1)
+    expect(all[0].title).toBe('Новый рецепт')
+  })
+})

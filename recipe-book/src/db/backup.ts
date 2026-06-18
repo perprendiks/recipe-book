@@ -2,6 +2,25 @@ import { db } from './db'
 import type { Recipe, Category } from './types'
 import { blobToBase64, base64ToBlob } from '../lib/photo'
 
+function normalizeRecipe(r: any): Omit<Recipe, 'photo'> & { photo?: string } {
+  return {
+    id: typeof r.id === 'string' && r.id ? r.id : crypto.randomUUID(),
+    title: typeof r.title === 'string' ? r.title : '',
+    category: typeof r.category === 'string' ? r.category : '',
+    tags: Array.isArray(r.tags) ? r.tags : [],
+    ingredients: Array.isArray(r.ingredients) ? r.ingredients : [],
+    steps: Array.isArray(r.steps) ? r.steps : [],
+    photo: r.photo,
+    rating: typeof r.rating === 'number' ? r.rating : 0,
+    timeMinutes: typeof r.timeMinutes === 'number' ? r.timeMinutes : null,
+    servings: typeof r.servings === 'number' ? r.servings : null,
+    notes: typeof r.notes === 'string' ? r.notes : '',
+    isFavorite: !!r.isFavorite,
+    createdAt: typeof r.createdAt === 'number' ? r.createdAt : Date.now(),
+    updatedAt: typeof r.updatedAt === 'number' ? r.updatedAt : Date.now(),
+  }
+}
+
 export type SerializedRecipe = Omit<Recipe, 'photo'> & { photo?: string }
 
 export interface BackupFile {
@@ -26,7 +45,8 @@ export async function exportBackup(): Promise<BackupFile> {
 export async function importBackup(file: BackupFile, mode: 'replace' | 'merge'): Promise<void> {
   const recipes: Recipe[] = await Promise.all(
     file.recipes.map(async (s) => {
-      const { photo, ...rest } = s
+      const normalized = normalizeRecipe(s)
+      const { photo, ...rest } = normalized
       return { ...rest, photo: photo ? await base64ToBlob(photo) : undefined }
     }),
   )

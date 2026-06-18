@@ -81,3 +81,18 @@ test('parseBackupFile принимает валидный бэкап', async () 
   const parsed = parseBackupFile(JSON.stringify(backup))
   expect(parsed.recipes).toHaveLength(1)
 })
+
+test('importBackup нормализует неполные записи: пустые tags/ingredients/steps', async () => {
+  const backupWithPartial = {
+    version: 1 as const,
+    exportedAt: Date.now(),
+    recipes: [{ id: 'partial-1', title: 'Без полей' }],
+    categories: [],
+  }
+  await importBackup(backupWithPartial, 'replace')
+  const all = await db.recipes.toArray()
+  expect(all).toHaveLength(1)
+  expect(all[0].tags).toEqual([])
+  expect(all[0].ingredients).toEqual([])
+  expect(all[0].steps).toEqual([])
+})
