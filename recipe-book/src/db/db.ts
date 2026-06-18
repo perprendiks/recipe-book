@@ -1,5 +1,5 @@
-import Dexie, { Table } from 'dexie'
-import { Recipe, Category, ShoppingItem, SettingEntry } from './types'
+import Dexie, { type Table } from 'dexie'
+import type { Recipe, Category, ShoppingItem, SettingEntry } from './types'
 
 export class RecipeDB extends Dexie {
   recipes!: Table<Recipe, string>

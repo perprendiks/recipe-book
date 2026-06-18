@@ -1,5 +1,5 @@
 import { db } from './db'
-import { Recipe, Category } from './types'
+import type { Recipe, Category } from './types'
 import { blobToBase64, base64ToBlob } from '../lib/photo'
 
 export type SerializedRecipe = Omit<Recipe, 'photo'> & { photo?: string }

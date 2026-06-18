@@ -1,5 +1,5 @@
 import { db } from './db'
-import { Recipe } from './types'
+import type { Recipe } from './types'
 
 export type RecipeInput = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>
 

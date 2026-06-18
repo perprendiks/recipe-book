@@ -1,5 +1,5 @@
 import { db } from './db'
-import { Category } from './types'
+import type { Category } from './types'
 
 export const DEFAULT_CATEGORIES = [
   'Супы', 'Салаты', 'Горячее', 'Гарниры', 'Выпечка', 'Десерты', 'Напитки', 'Заготовки',
