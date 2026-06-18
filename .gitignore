@@ -10,3 +10,6 @@ demo-*.png
 
 # Vite dev cache
 recipe-book/.vite/
+
+# Claude Code локальные файлы сессии
+.claude/
