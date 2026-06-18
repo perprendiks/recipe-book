@@ -3,14 +3,22 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getRecipe, deleteRecipe, toggleFavorite } from '../db/recipes'
 import type { Recipe } from '../db/types'
 import StarRating from '../components/StarRating'
+import { scaleIngredients, formatAmount } from '../lib/scale'
 
 export default function RecipePage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [recipe, setRecipe] = useState<Recipe | null>()
   const [photoUrl, setPhotoUrl] = useState<string>()
+  const [servings, setServings] = useState<number | null>(null)
 
-  useEffect(() => { if (id) getRecipe(id).then((r) => setRecipe(r ?? null)) }, [id])
+  useEffect(() => {
+    if (id) getRecipe(id).then((r) => {
+      const recipe = r ?? null
+      setRecipe(recipe)
+      if (recipe?.servings != null && recipe.servings > 0) setServings(recipe.servings)
+    })
+  }, [id])
   useEffect(() => {
     if (!recipe?.photo) { setPhotoUrl(undefined); return }
     const u = URL.createObjectURL(recipe.photo)
@@ -74,12 +82,40 @@ export default function RecipePage() {
         )}
 
         <section>
-          <h2 className="font-display text-lg text-ink mb-2.5">Ингредиенты</h2>
+          <div className="flex items-center justify-between mb-2.5">
+            <h2 className="font-display text-lg text-ink">Ингредиенты</h2>
+            {recipe.servings != null && recipe.servings > 0 && servings !== null && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setServings((s) => Math.max(1, (s ?? 1) - 1))}
+                  aria-label="Уменьшить порции"
+                  className="w-9 h-9 rounded-chip border border-border grid place-items-center text-ink active:scale-90 transition-transform bg-surface"
+                >
+                  −
+                </button>
+                <span className="font-display text-ink w-8 text-center">{servings}</span>
+                <button
+                  onClick={() => setServings((s) => (s ?? 1) + 1)}
+                  aria-label="Увеличить порции"
+                  className="w-9 h-9 rounded-chip border border-border grid place-items-center text-ink active:scale-90 transition-transform bg-surface"
+                >
+                  +
+                </button>
+              </div>
+            )}
+          </div>
           <ul className="flex flex-col gap-1.5">
-            {recipe.ingredients.map((i, idx) => (
+            {(recipe.servings != null && recipe.servings > 0 && servings !== null
+              ? scaleIngredients(recipe.ingredients, servings / recipe.servings)
+              : recipe.ingredients
+            ).map((i, idx) => (
               <li key={idx} className="flex items-baseline justify-between gap-3 border-b border-border/60 pb-1.5 last:border-0">
                 <span className="text-ink">{i.name}</span>
-                {i.amount != null && <span className="text-ink-soft text-sm whitespace-nowrap">{i.amount} {i.unit}</span>}
+                {i.amount != null && (
+                  <span className="text-ink-soft text-sm whitespace-nowrap">
+                    {formatAmount(i.amount)} {i.unit}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
