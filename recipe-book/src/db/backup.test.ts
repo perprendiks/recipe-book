@@ -44,6 +44,31 @@ test('importBackup replace восстанавливает рецепты и фо
   const all = await db.recipes.toArray()
   expect(all).toHaveLength(1)
   expect(all[0].photo).toBeInstanceOf(Blob)
+  const bytes = new Uint8Array(await all[0].photo!.arrayBuffer())
+  expect(Array.from(bytes)).toEqual([7, 7])
+})
+
+test('importBackup merge не удаляет существующие данные', async () => {
+  // Add recipe A
+  await addRecipe({ ...baseRecipe, title: 'Рецепт А' })
+
+  // Build a backup containing only recipe B (with a different id)
+  await db.recipes.clear()
+  await db.categories.clear()
+  await addCategory('Десерты')
+  await addRecipe({ ...baseRecipe, title: 'Рецепт Б' })
+  const backupWithB = await exportBackup()
+
+  // Restore recipe A manually before merge
+  await db.recipes.put({ ...baseRecipe, title: 'Рецепт А', id: 9999 })
+
+  // Merge — should keep A and add B
+  await importBackup(backupWithB, 'merge')
+  const all = await db.recipes.toArray()
+  const titles = all.map((r) => r.title)
+  expect(all.length).toBeGreaterThanOrEqual(2)
+  expect(titles).toContain('Рецепт А')
+  expect(titles).toContain('Рецепт Б')
 })
 
 test('parseBackupFile бросает ошибку на чужом формате', () => {

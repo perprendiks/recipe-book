@@ -6,6 +6,7 @@ import '@testing-library/jest-dom'
 const _origStructuredClone = globalThis.structuredClone
 function _deepClonePreservingBlob(value: unknown): unknown {
   if (value === null || typeof value !== 'object') return value
+  if (value instanceof Date) return new Date(value.getTime())
   const v = value as Record<string, unknown>
   if (typeof v['arrayBuffer'] === 'function' && 'size' in v && 'type' in v) {
     return value // Blob-like — return as-is (identity clone)

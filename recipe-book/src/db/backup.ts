@@ -42,7 +42,7 @@ export async function importBackup(file: BackupFile, mode: 'replace' | 'merge'):
 
 export function parseBackupFile(text: string): BackupFile {
   const data = JSON.parse(text)
-  if (data?.version !== 1 || !Array.isArray(data.recipes)) {
+  if (data?.version !== 1 || !Array.isArray(data.recipes) || !Array.isArray(data.categories)) {
     throw new Error('Неверный формат файла бэкапа')
   }
   return data as BackupFile
