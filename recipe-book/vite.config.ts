@@ -2,7 +2,11 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// На GitHub Actions base берётся из имени репозитория (/<repo>/), локально — '/'.
+const repo = process.env.GITHUB_REPOSITORY?.split('/')[1]
+
 export default defineConfig({
+  base: repo ? `/${repo}/` : '/',
   plugins: [
     react(),
     VitePWA({
