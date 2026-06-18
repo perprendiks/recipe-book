@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getRecipe, deleteRecipe, toggleFavorite } from '../db/recipes'
+import { addItemsFromRecipe } from '../db/shopping'
 import type { Recipe } from '../db/types'
 import StarRating from '../components/StarRating'
 import { scaleIngredients, formatAmount } from '../lib/scale'
@@ -11,6 +12,7 @@ export default function RecipePage() {
   const [recipe, setRecipe] = useState<Recipe | null>()
   const [photoUrl, setPhotoUrl] = useState<string>()
   const [servings, setServings] = useState<number | null>(null)
+  const [addedToList, setAddedToList] = useState(false)
 
   useEffect(() => {
     if (id) getRecipe(id).then((r) => {
@@ -41,6 +43,13 @@ export default function RecipePage() {
   }
   async function onFav() {
     if (id) { await toggleFavorite(id); setRecipe(await getRecipe(id)) }
+  }
+
+  async function onAddToList() {
+    if (!recipe) return
+    await addItemsFromRecipe(recipe)
+    setAddedToList(true)
+    setTimeout(() => setAddedToList(false), 3000)
   }
 
   const meta = [
@@ -140,12 +149,20 @@ export default function RecipePage() {
           </section>
         )}
 
-        <div className="flex gap-2.5 pt-1">
-          <Link to={`/edit/${recipe.id}`} className="flex-1 text-center bg-accent text-on-accent rounded-chip py-3 font-bold active:scale-[0.98] transition-transform">
-            Редактировать
-          </Link>
-          <button onClick={onDelete} className="px-5 text-danger border border-danger/40 rounded-chip py-3 font-semibold active:scale-[0.98] transition-transform">
-            Удалить
+        <div className="flex flex-col gap-2.5 pt-1">
+          <div className="flex gap-2.5">
+            <Link to={`/edit/${recipe.id}`} className="flex-1 text-center bg-accent text-on-accent rounded-chip py-3 font-bold active:scale-[0.98] transition-transform">
+              Редактировать
+            </Link>
+            <button onClick={onDelete} className="px-5 text-danger border border-danger/40 rounded-chip py-3 font-semibold active:scale-[0.98] transition-transform">
+              Удалить
+            </button>
+          </div>
+          <button
+            onClick={onAddToList}
+            className="btn-secondary w-full"
+          >
+            {addedToList ? '✓ Добавлено в список' : 'В список покупок'}
           </button>
         </div>
       </div>

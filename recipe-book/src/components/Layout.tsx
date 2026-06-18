@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
 
-type IconName = 'recipes' | 'add' | 'settings'
+type IconName = 'recipes' | 'add' | 'settings' | 'shopping'
 
 function Icon({ name }: { name: IconName }) {
   const common = {
@@ -27,11 +27,19 @@ function Icon({ name }: { name: IconName }) {
         <path d="M12 8.5v7M8.5 12h7" />
       </svg>
     )
+  if (name === 'settings')
+    return (
+      <svg {...common}>
+        <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
+        <circle cx="16" cy="7" r="2.2" />
+        <circle cx="8" cy="17" r="2.2" />
+      </svg>
+    )
   return (
     <svg {...common}>
-      <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
-      <circle cx="16" cy="7" r="2.2" />
-      <circle cx="8" cy="17" r="2.2" />
+      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+      <path d="M3 6h18" />
+      <path d="M16 10a4 4 0 0 1-8 0" />
     </svg>
   )
 }
@@ -60,6 +68,7 @@ export default function Layout() {
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-surface/95 backdrop-blur-sm border-t border-border flex pb-[env(safe-area-inset-bottom)]">
         {tab('/', 'Рецепты', 'recipes')}
         {tab('/add', 'Добавить', 'add')}
+        {tab('/shopping', 'Покупки', 'shopping')}
         {tab('/settings', 'Настройки', 'settings')}
       </nav>
     </div>
