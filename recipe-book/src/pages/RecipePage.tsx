@@ -150,6 +150,12 @@ export default function RecipePage() {
         )}
 
         <div className="flex flex-col gap-2.5 pt-1">
+          <button
+            onClick={() => navigate('/cook/' + recipe.id)}
+            className="btn-primary w-full"
+          >
+            Готовить
+          </button>
           <div className="flex gap-2.5">
             <Link to={`/edit/${recipe.id}`} className="flex-1 text-center bg-accent text-on-accent rounded-chip py-3 font-bold active:scale-[0.98] transition-transform">
               Редактировать
