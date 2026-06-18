@@ -99,7 +99,7 @@ export default function CookPage() {
           </p>
         )}
         {timerMinutes !== null && (
-          <StepTimer minutes={timerMinutes} />
+          <StepTimer key={stepIndex} minutes={timerMinutes} />
         )}
       </div>
 
