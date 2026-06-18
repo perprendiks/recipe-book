@@ -3,6 +3,7 @@ import type { ChangeEvent } from 'react'
 import { downloadBackup, parseBackupFile, importBackup } from '../db/backup'
 import { getCategories, addCategory, renameCategory, deleteCategory } from '../db/categories'
 import type { Category } from '../db/types'
+import UnitConverter from '../components/UnitConverter'
 
 export default function SettingsPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -86,6 +87,11 @@ export default function SettingsPage() {
               +
             </button>
           </div>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="section-title">Конвертер единиц</h2>
+          <UnitConverter />
         </section>
       </div>
     </div>
