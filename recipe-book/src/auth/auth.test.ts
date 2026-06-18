@@ -9,9 +9,16 @@ const mockAuth = vi.hoisted(() => ({
 }))
 vi.mock('../db/supabase', () => ({ supabase: { auth: mockAuth }, isCloudConfigured: () => true }))
 
-import { signIn, getCurrentUser } from './auth'
+import { signIn, signUp, getCurrentUser } from './auth'
 
 beforeEach(() => vi.clearAllMocks())
+
+test('signUp возвращает пользователя при успехе', async () => {
+  mockAuth.signUp.mockResolvedValue({ data: { user: { id: 'u2', email: 'x@y.z' } }, error: null })
+  const r = await signUp('x@y.z', 'pw')
+  expect(r.user).toEqual({ id: 'u2', email: 'x@y.z' })
+  expect(r.error).toBeNull()
+})
 
 test('signIn возвращает пользователя при успехе', async () => {
   mockAuth.signInWithPassword.mockResolvedValue({ data: { user: { id: 'u1', email: 'a@b.c' } }, error: null })
