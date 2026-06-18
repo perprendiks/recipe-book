@@ -3,3 +3,7 @@ photo/
 
 # Рабочие файлы оцифровки
 recipes-import*.json
+
+# Демо-скриншоты и артефакты браузера
+demo-*.png
+.playwright-mcp/
