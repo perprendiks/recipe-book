@@ -1,22 +1,37 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getRecipe, deleteRecipe, toggleFavorite } from '../db/recipes'
+import { addItemsFromRecipe } from '../db/shopping'
 import type { Recipe } from '../db/types'
 import StarRating from '../components/StarRating'
+import { scaleIngredients, formatAmount } from '../lib/scale'
 
 export default function RecipePage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [recipe, setRecipe] = useState<Recipe | null>()
   const [photoUrl, setPhotoUrl] = useState<string>()
+  const [servings, setServings] = useState<number | null>(null)
+  const [addedToList, setAddedToList] = useState(false)
+  const addedToListTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  useEffect(() => { if (id) getRecipe(id).then((r) => setRecipe(r ?? null)) }, [id])
+  useEffect(() => {
+    if (id) getRecipe(id).then((r) => {
+      const loaded = r ?? null
+      setRecipe(loaded)
+      if (loaded?.servings != null && loaded.servings > 0) setServings(loaded.servings)
+    })
+  }, [id])
   useEffect(() => {
     if (!recipe?.photo) { setPhotoUrl(undefined); return }
     const u = URL.createObjectURL(recipe.photo)
     setPhotoUrl(u)
     return () => URL.revokeObjectURL(u)
   }, [recipe?.photo])
+
+  useEffect(() => {
+    return () => { clearTimeout(addedToListTimer.current) }
+  }, [])
 
   if (recipe === undefined)
     return <div className="p-6 text-center text-ink-soft">Загрузка…</div>
@@ -33,6 +48,14 @@ export default function RecipePage() {
   }
   async function onFav() {
     if (id) { await toggleFavorite(id); setRecipe(await getRecipe(id)) }
+  }
+
+  async function onAddToList() {
+    if (!recipe) return
+    await addItemsFromRecipe(recipe)
+    setAddedToList(true)
+    clearTimeout(addedToListTimer.current)
+    addedToListTimer.current = setTimeout(() => setAddedToList(false), 3000)
   }
 
   const meta = [
@@ -74,12 +97,40 @@ export default function RecipePage() {
         )}
 
         <section>
-          <h2 className="font-display text-lg text-ink mb-2.5">Ингредиенты</h2>
+          <div className="flex items-center justify-between mb-2.5">
+            <h2 className="font-display text-lg text-ink">Ингредиенты</h2>
+            {recipe.servings != null && recipe.servings > 0 && servings !== null && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setServings((s) => Math.max(1, (s ?? 1) - 1))}
+                  aria-label="Уменьшить порции"
+                  className="w-9 h-9 rounded-chip border border-border grid place-items-center text-ink active:scale-90 transition-transform bg-surface"
+                >
+                  −
+                </button>
+                <span className="font-display text-ink w-8 text-center">{servings}</span>
+                <button
+                  onClick={() => setServings((s) => (s ?? 1) + 1)}
+                  aria-label="Увеличить порции"
+                  className="w-9 h-9 rounded-chip border border-border grid place-items-center text-ink active:scale-90 transition-transform bg-surface"
+                >
+                  +
+                </button>
+              </div>
+            )}
+          </div>
           <ul className="flex flex-col gap-1.5">
-            {recipe.ingredients.map((i, idx) => (
+            {(recipe.servings != null && recipe.servings > 0 && servings !== null
+              ? scaleIngredients(recipe.ingredients, servings / recipe.servings)
+              : recipe.ingredients
+            ).map((i, idx) => (
               <li key={idx} className="flex items-baseline justify-between gap-3 border-b border-border/60 pb-1.5 last:border-0">
                 <span className="text-ink">{i.name}</span>
-                {i.amount != null && <span className="text-ink-soft text-sm whitespace-nowrap">{i.amount} {i.unit}</span>}
+                {i.amount != null && (
+                  <span className="text-ink-soft text-sm whitespace-nowrap">
+                    {formatAmount(i.amount)} {i.unit}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
@@ -104,12 +155,26 @@ export default function RecipePage() {
           </section>
         )}
 
-        <div className="flex gap-2.5 pt-1">
-          <Link to={`/edit/${recipe.id}`} className="flex-1 text-center bg-accent text-on-accent rounded-chip py-3 font-bold active:scale-[0.98] transition-transform">
-            Редактировать
-          </Link>
-          <button onClick={onDelete} className="px-5 text-danger border border-danger/40 rounded-chip py-3 font-semibold active:scale-[0.98] transition-transform">
-            Удалить
+        <div className="flex flex-col gap-2.5 pt-1">
+          <button
+            onClick={() => navigate('/cook/' + recipe.id)}
+            className="btn-primary w-full"
+          >
+            Готовить
+          </button>
+          <div className="flex gap-2.5">
+            <Link to={`/edit/${recipe.id}`} className="flex-1 text-center bg-accent text-on-accent rounded-chip py-3 font-bold active:scale-[0.98] transition-transform">
+              Редактировать
+            </Link>
+            <button onClick={onDelete} className="px-5 text-danger border border-danger/40 rounded-chip py-3 font-semibold active:scale-[0.98] transition-transform">
+              Удалить
+            </button>
+          </div>
+          <button
+            onClick={onAddToList}
+            className="btn-secondary w-full"
+          >
+            {addedToList ? '✓ Добавлено в список' : 'В список покупок'}
           </button>
         </div>
       </div>
