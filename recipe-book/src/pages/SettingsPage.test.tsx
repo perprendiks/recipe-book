@@ -20,3 +20,11 @@ test('импорт файла бэкапа добавляет рецепты', a
   await userEvent.upload(screen.getByLabelText('Загрузить файл бэкапа'), file)
   await waitFor(async () => expect(await getAllRecipes()).toHaveLength(1))
 })
+
+test('импорт некорректного JSON файла показывает ошибку', async () => {
+  render(<MemoryRouter><SettingsPage /></MemoryRouter>)
+  const file = new File(['this is not json'], 'bad.json', { type: 'application/json' })
+  await userEvent.upload(screen.getByLabelText('Загрузить файл бэкапа'), file)
+  await screen.findByText(/Ошибка/)
+  expect(await getAllRecipes()).toHaveLength(0)
+})

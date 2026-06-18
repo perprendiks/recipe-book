@@ -41,8 +41,8 @@ export default function SettingsPage() {
         <h2 className="font-semibold">Категории</h2>
         {categories.map((c) => (
           <div key={c.id} className="flex gap-2 items-center">
-            <input className="border rounded px-2 py-1 flex-1" value={c.name} onChange={(e) => { renameCategory(c.id, e.target.value); setCategories(cs => cs.map(x => x.id === c.id ? { ...x, name: e.target.value } : x)) }} />
-            <button onClick={async () => { await deleteCategory(c.id); reload() }} className="text-red-500 text-sm">Удалить</button>
+            <input className="border rounded px-2 py-1 flex-1" value={c.name} onChange={async (e) => { const name = e.target.value; await renameCategory(c.id, name); setCategories(cs => cs.map(x => x.id === c.id ? { ...x, name } : x)) }} />
+            <button onClick={async () => { await deleteCategory(c.id); await reload() }} className="text-red-500 text-sm">Удалить</button>
           </div>
         ))}
         <div className="flex gap-2">
