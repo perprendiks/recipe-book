@@ -24,3 +24,13 @@ test('показывает рецепт по id', async () => {
   expect(screen.getByText(/Рис/)).toBeInTheDocument()
   expect(screen.getByText(/Обжарить/)).toBeInTheDocument()
 })
+
+test('показывает "Рецепт не найден" когда рецепта нет в БД', async () => {
+  render(
+    <MemoryRouter initialEntries={['/recipe/does-not-exist']}>
+      <Routes><Route path="/recipe/:id" element={<RecipePage />} /></Routes>
+    </MemoryRouter>,
+  )
+  await screen.findByText('Рецепт не найден')
+  expect(screen.getByText('Рецепт не найден')).toBeInTheDocument()
+})

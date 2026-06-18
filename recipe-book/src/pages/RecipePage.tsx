@@ -7,10 +7,10 @@ import StarRating from '../components/StarRating'
 export default function RecipePage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [recipe, setRecipe] = useState<Recipe>()
+  const [recipe, setRecipe] = useState<Recipe | null>()
   const [photoUrl, setPhotoUrl] = useState<string>()
 
-  useEffect(() => { if (id) getRecipe(id).then(setRecipe) }, [id])
+  useEffect(() => { if (id) getRecipe(id).then((r) => setRecipe(r ?? null)) }, [id])
   useEffect(() => {
     if (!recipe?.photo) { setPhotoUrl(undefined); return }
     const u = URL.createObjectURL(recipe.photo)
@@ -18,7 +18,8 @@ export default function RecipePage() {
     return () => URL.revokeObjectURL(u)
   }, [recipe?.photo])
 
-  if (!recipe) return <div className="p-4">Загрузка…</div>
+  if (recipe === undefined) return <div className="p-4">Загрузка…</div>
+  if (recipe === null) return <div className="p-4">Рецепт не найден</div>
 
   async function onDelete() {
     if (id && confirm('Удалить рецепт?')) { await deleteRecipe(id); navigate('/') }
