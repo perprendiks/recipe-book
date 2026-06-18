@@ -50,3 +50,31 @@ test('toggleFavorite переключает избранное', async () => {
   await toggleFavorite(r.id)
   expect((await getRecipe(r.id))!.isFavorite).toBe(false)
 })
+
+test('getAllRecipes возвращает рецепты в порядке убывания по updatedAt', async () => {
+  const r1 = await addRecipe(base)
+  // Принудительно создаём разницу во времени обновления
+  await new Promise(r => setTimeout(r, 2))
+  const r2 = await addRecipe({ ...base, title: 'Окрошка' })
+  // Обновляем первый рецепт, чтобы его updatedAt стал больше
+  await updateRecipe(r1.id, { title: 'Борщ обновленный' })
+
+  const all = await getAllRecipes()
+  expect(all).toHaveLength(2)
+  // Первый в массиве должен быть с большим updatedAt (самый свежий)
+  expect(all[0].id).toBe(r1.id)
+  expect(all[0].title).toBe('Борщ обновленный')
+  expect(all[1].id).toBe(r2.id)
+})
+
+test('toggleFavorite и updateRecipe no-op на несуществующем id без ошибок', async () => {
+  // Проверяем toggleFavorite на несуществующий id
+  await expect(toggleFavorite('nonexistent-id')).resolves.toBeUndefined()
+
+  // Проверяем updateRecipe на несуществующий id
+  await expect(updateRecipe('nonexistent-id', { title: 'Новое имя' })).resolves.toBeUndefined()
+
+  // Убедимся, что БД осталась неизменной (пуста или с теми же рецептами)
+  const all = await getAllRecipes()
+  expect(all).toHaveLength(0)
+})
