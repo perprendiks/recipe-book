@@ -1,3 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Nunito:wght@400;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* Поверхности — тёплая «бумага» */
+  --bg: oklch(0.984 0.013 75);
+  --surface: oklch(0.975 0.016 72);
+  --surface-sunk: oklch(0.955 0.018 70);
+  --border: oklch(0.90 0.020 68);
+
+  /* Текст — тёплый тёмно-коричневый */
+  --ink: oklch(0.30 0.028 55);
+  --ink-soft: oklch(0.50 0.024 58);
+  --ink-faint: oklch(0.66 0.020 62);
+
+  /* Акцент — терракот */
+  --accent: oklch(0.62 0.135 42);
+  --accent-hover: oklch(0.57 0.140 41);
+  --accent-soft: oklch(0.93 0.045 55);
+  --on-accent: oklch(0.985 0.013 75);
+
+  /* Семантика */
+  --heart: oklch(0.60 0.165 25);
+  --star: oklch(0.76 0.135 75);
+  --danger: oklch(0.58 0.150 28);
+  --success: oklch(0.62 0.090 145);
+
+  --font-display: 'Lora', Georgia, 'Times New Roman', serif;
+  --font-body: 'Nunito', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  /* Тёплое кольцо фокуса для доступности */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .field {
+    @apply w-full bg-surface border border-border rounded-chip px-3 py-2.5 text-[15px] text-ink placeholder:text-ink-faint outline-none transition-colors;
+  }
+  .field:focus {
+    border-color: var(--accent);
+  }
+  .field-label {
+    @apply text-sm font-semibold text-ink-soft mb-1;
+  }
+  .btn-primary {
+    @apply bg-accent text-on-accent rounded-chip py-3 font-bold text-center transition-transform duration-150 active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100;
+  }
+  .btn-secondary {
+    @apply bg-surface border border-border text-ink-soft rounded-chip py-2.5 font-semibold text-center transition-transform duration-150 active:scale-[0.98];
+  }
+  .section-title {
+    @apply font-display text-lg text-ink;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

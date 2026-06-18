@@ -18,46 +18,100 @@ export default function RecipePage() {
     return () => URL.revokeObjectURL(u)
   }, [recipe?.photo])
 
-  if (recipe === undefined) return <div className="p-4">Загрузка…</div>
-  if (recipe === null) return <div className="p-4">Рецепт не найден</div>
+  if (recipe === undefined)
+    return <div className="p-6 text-center text-ink-soft">Загрузка…</div>
+  if (recipe === null)
+    return (
+      <div className="p-8 text-center flex flex-col items-center gap-2">
+        <h1 className="font-display text-xl text-ink">Рецепт не найден</h1>
+        <Link to="/" className="text-accent font-semibold text-sm">← К рецептам</Link>
+      </div>
+    )
 
   async function onDelete() {
-    if (id && confirm('Удалить рецепт?')) { await deleteRecipe(id); navigate('/') }
+    if (id && confirm('Удалить этот рецепт?')) { await deleteRecipe(id); navigate('/') }
   }
   async function onFav() {
     if (id) { await toggleFavorite(id); setRecipe(await getRecipe(id)) }
   }
 
+  const meta = [
+    recipe.category,
+    recipe.timeMinutes != null ? `${recipe.timeMinutes} мин` : null,
+    recipe.servings != null ? `${recipe.servings} порц.` : null,
+  ].filter(Boolean).join(' · ')
+
   return (
-    <div className="p-3 flex flex-col gap-4">
-      {photoUrl && <img src={photoUrl} alt={recipe.title} className="w-full h-56 object-cover rounded-xl" />}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{recipe.title}</h1>
-        <button onClick={onFav} aria-label="В избранное" className="text-2xl">{recipe.isFavorite ? '❤️' : '🤍'}</button>
-      </div>
-      <div className="text-sm text-gray-600">{recipe.category} · {recipe.timeMinutes ?? '—'} мин · {recipe.servings ?? '—'} порц.</div>
-      <StarRating value={recipe.rating} />
-      {recipe.tags.length > 0 && <div className="flex gap-2 flex-wrap">{recipe.tags.map(t => <span key={t} className="text-xs bg-gray-100 rounded-full px-2 py-1">#{t}</span>)}</div>}
+    <div className="flex flex-col">
+      {photoUrl && (
+        <img src={photoUrl} alt={recipe.title} className="w-full h-60 object-cover" />
+      )}
 
-      <section>
-        <h2 className="font-semibold mb-1">Ингредиенты</h2>
-        <ul className="list-disc pl-5">
-          {recipe.ingredients.map((i, idx) => <li key={idx}>{i.name}{i.amount != null ? ` — ${i.amount} ${i.unit}` : ''}</li>)}
-        </ul>
-      </section>
+      <div className="px-4 pt-5 pb-6 flex flex-col gap-5">
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="font-display text-[28px] leading-tight text-ink">{recipe.title}</h1>
+          <button
+            onClick={onFav}
+            aria-label={recipe.isFavorite ? 'Убрать из избранного' : 'В избранное'}
+            className="shrink-0 grid place-items-center w-11 h-11 rounded-full bg-surface border border-border active:scale-90 transition-transform"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill={recipe.isFavorite ? 'var(--heart)' : 'none'} stroke="var(--heart)" strokeWidth="1.7" strokeLinejoin="round">
+              <path d="M12 20.5 4.5 13a4.5 4.5 0 0 1 6.4-6.3l1.1 1.1 1.1-1.1A4.5 4.5 0 0 1 19.5 13L12 20.5Z" />
+            </svg>
+          </button>
+        </div>
 
-      <section>
-        <h2 className="font-semibold mb-1">Приготовление</h2>
-        <ol className="list-decimal pl-5 flex flex-col gap-1">
-          {recipe.steps.map((s, idx) => <li key={idx}>{s.text}</li>)}
-        </ol>
-      </section>
+        {meta && <div className="text-sm text-ink-soft -mt-2">{meta}</div>}
 
-      {recipe.notes && <section><h2 className="font-semibold mb-1">Заметки</h2><p className="whitespace-pre-wrap">{recipe.notes}</p></section>}
+        {recipe.rating > 0 && <StarRating value={recipe.rating} size={24} />}
 
-      <div className="flex gap-2">
-        <Link to={`/edit/${recipe.id}`} className="flex-1 text-center border rounded-lg py-2">Редактировать</Link>
-        <button onClick={onDelete} className="flex-1 text-red-600 border border-red-200 rounded-lg py-2">Удалить</button>
+        {recipe.tags.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            {recipe.tags.map((t) => (
+              <span key={t} className="text-xs font-semibold text-ink-soft bg-surface-sunk rounded-chip px-2.5 py-1">#{t}</span>
+            ))}
+          </div>
+        )}
+
+        <section>
+          <h2 className="font-display text-lg text-ink mb-2.5">Ингредиенты</h2>
+          <ul className="flex flex-col gap-1.5">
+            {recipe.ingredients.map((i, idx) => (
+              <li key={idx} className="flex items-baseline justify-between gap-3 border-b border-border/60 pb-1.5 last:border-0">
+                <span className="text-ink">{i.name}</span>
+                {i.amount != null && <span className="text-ink-soft text-sm whitespace-nowrap">{i.amount} {i.unit}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="font-display text-lg text-ink mb-3">Приготовление</h2>
+          <ol className="flex flex-col gap-4">
+            {recipe.steps.map((s, idx) => (
+              <li key={idx} className="flex gap-3">
+                <span className="shrink-0 grid place-items-center w-7 h-7 rounded-full bg-accent text-on-accent text-sm font-bold mt-0.5">{idx + 1}</span>
+                <p className="text-[17px] leading-relaxed text-ink max-w-[65ch]">{s.text}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {recipe.notes && (
+          <section>
+            <h2 className="font-display text-lg text-ink mb-2">Заметки</h2>
+            <p className="whitespace-pre-wrap text-ink bg-accent-soft/60 rounded-card px-4 py-3 leading-relaxed">{recipe.notes}</p>
+          </section>
+        )}
+
+        <div className="flex gap-2.5 pt-1">
+          <Link to={`/edit/${recipe.id}`} className="flex-1 text-center bg-accent text-on-accent rounded-chip py-3 font-bold active:scale-[0.98] transition-transform">
+            Редактировать
+          </Link>
+          <button onClick={onDelete} className="px-5 text-danger border border-danger/40 rounded-chip py-3 font-semibold active:scale-[0.98] transition-transform">
+            Удалить
+          </button>
+        </div>
       </div>
     </div>
   )
