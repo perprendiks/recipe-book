@@ -13,3 +13,5 @@ recipe-book/.vite/
 
 # Claude Code локальные файлы сессии
 .claude/
+build-import.mjs
+design-*.png
