@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto'
-import { beforeEach, expect, test } from 'vitest'
+import { beforeEach, expect, test, vi } from 'vitest'
 import { db } from './db'
 import { addRecipe, getRecipe, getAllRecipes, updateRecipe, deleteRecipe, toggleFavorite, RecipeInput } from './recipes'
 
@@ -52,16 +52,17 @@ test('toggleFavorite переключает избранное', async () => {
 })
 
 test('getAllRecipes возвращает рецепты в порядке убывания по updatedAt', async () => {
+  const spy = vi.spyOn(Date, 'now')
+  spy.mockReturnValue(1000)
   const r1 = await addRecipe(base)
-  // Принудительно создаём разницу во времени обновления
-  await new Promise(r => setTimeout(r, 2))
+  spy.mockReturnValue(2000)
   const r2 = await addRecipe({ ...base, title: 'Окрошка' })
-  // Обновляем первый рецепт, чтобы его updatedAt стал больше
+  spy.mockReturnValue(3000)
   await updateRecipe(r1.id, { title: 'Борщ обновленный' })
+  spy.mockRestore()
 
   const all = await getAllRecipes()
   expect(all).toHaveLength(2)
-  // Первый в массиве должен быть с большим updatedAt (самый свежий)
   expect(all[0].id).toBe(r1.id)
   expect(all[0].title).toBe('Борщ обновленный')
   expect(all[1].id).toBe(r2.id)
