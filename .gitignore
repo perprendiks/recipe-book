@@ -7,3 +7,6 @@ recipes-import*.json
 # Демо-скриншоты и артефакты браузера
 demo-*.png
 .playwright-mcp/
+
+# Vite dev cache
+recipe-book/.vite/
