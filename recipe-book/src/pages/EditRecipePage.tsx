@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { addRecipe, getRecipe, updateRecipe } from '../db/recipes'
 import type { RecipeInput } from '../db/recipes'
 import { getCategories } from '../db/categories'
-import type { Category, Ingredient, Step } from '../db/types'
+import type { Category, Ingredient } from '../db/types'
 import StarRating from '../components/StarRating'
 import PhotoPicker from '../components/PhotoPicker'
 
@@ -33,9 +33,9 @@ export default function EditRecipePage() {
 
   const set = (patch: Partial<RecipeInput>) => setForm((f) => ({ ...f, ...patch }))
   const setIngredient = (i: number, patch: Partial<Ingredient>) =>
-    set({ ingredients: form.ingredients.map((ing, j) => j === i ? { ...ing, ...patch } : ing) })
+    setForm((f) => ({ ...f, ingredients: f.ingredients.map((ing, j) => j === i ? { ...ing, ...patch } : ing) }))
   const setStep = (i: number, text: string) =>
-    set({ steps: form.steps.map((s: Step, j) => j === i ? { ...s, text } : s) })
+    setForm((f) => ({ ...f, steps: f.steps.map((s, j) => j === i ? { ...s, text } : s) }))
 
   async function save() {
     const data: RecipeInput = { ...form, ingredients: form.ingredients.filter(i => i.name.trim()), steps: form.steps.filter(s => s.text.trim()) }
