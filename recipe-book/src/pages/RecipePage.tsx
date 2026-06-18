@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getRecipe, deleteRecipe, toggleFavorite } from '../db/recipes'
 import { addItemsFromRecipe } from '../db/shopping'
@@ -13,12 +13,13 @@ export default function RecipePage() {
   const [photoUrl, setPhotoUrl] = useState<string>()
   const [servings, setServings] = useState<number | null>(null)
   const [addedToList, setAddedToList] = useState(false)
+  const addedToListTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     if (id) getRecipe(id).then((r) => {
-      const recipe = r ?? null
-      setRecipe(recipe)
-      if (recipe?.servings != null && recipe.servings > 0) setServings(recipe.servings)
+      const loaded = r ?? null
+      setRecipe(loaded)
+      if (loaded?.servings != null && loaded.servings > 0) setServings(loaded.servings)
     })
   }, [id])
   useEffect(() => {
@@ -27,6 +28,10 @@ export default function RecipePage() {
     setPhotoUrl(u)
     return () => URL.revokeObjectURL(u)
   }, [recipe?.photo])
+
+  useEffect(() => {
+    return () => { clearTimeout(addedToListTimer.current) }
+  }, [])
 
   if (recipe === undefined)
     return <div className="p-6 text-center text-ink-soft">Загрузка…</div>
@@ -49,7 +54,8 @@ export default function RecipePage() {
     if (!recipe) return
     await addItemsFromRecipe(recipe)
     setAddedToList(true)
-    setTimeout(() => setAddedToList(false), 3000)
+    clearTimeout(addedToListTimer.current)
+    addedToListTimer.current = setTimeout(() => setAddedToList(false), 3000)
   }
 
   const meta = [

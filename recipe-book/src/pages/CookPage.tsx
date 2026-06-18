@@ -21,15 +21,22 @@ export default function CookPage() {
   // Wake Lock
   useEffect(() => {
     let lock: WakeLockSentinel | null = null
+    let cancelled = false
     async function requestWakeLock() {
       try {
-        lock = await navigator.wakeLock?.request('screen') ?? null
+        const acquired = await navigator.wakeLock?.request('screen') ?? null
+        if (cancelled) {
+          acquired?.release().catch(() => {})
+        } else {
+          lock = acquired
+        }
       } catch {
         // Wake Lock not supported or denied — silent fail
       }
     }
     requestWakeLock()
     return () => {
+      cancelled = true
       lock?.release().catch(() => {})
     }
   }, [])
@@ -52,6 +59,17 @@ export default function CookPage() {
         <p className="font-display text-xl text-ink">Рецепт не найден</p>
         <button onClick={() => navigate('/')} className="text-accent font-semibold text-sm">
           ← К рецептам
+        </button>
+      </div>
+    )
+  }
+
+  if (recipe.steps.length === 0) {
+    return (
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-3">
+        <p className="font-display text-xl text-ink">В этом рецепте нет шагов</p>
+        <button onClick={goBack} className="text-accent font-semibold">
+          ← К рецепту
         </button>
       </div>
     )

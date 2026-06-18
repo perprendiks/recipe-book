@@ -7,7 +7,7 @@ export default function UnitConverter() {
 
   const selected = CONVERTERS.find((c) => c.id === selectedId) ?? CONVERTERS[0]
   const num = parseFloat(raw)
-  const result = !isNaN(num) && raw !== '' ? convert(num, selected.factor) : null
+  const result = !isNaN(num) && raw !== '' && num >= 0 ? convert(num, selected.factor) : null
 
   return (
     <div className="flex flex-col gap-3">
