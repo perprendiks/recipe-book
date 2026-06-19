@@ -3,19 +3,37 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { addRecipe, getRecipe, updateRecipe } from '../db/recipes'
 import type { RecipeInput } from '../db/recipes'
 import { getCategories } from '../db/categories'
-import type { Category, Ingredient } from '../db/types'
+import type { Category } from '../db/types'
 import StarRating from '../components/StarRating'
 import PhotoPicker from '../components/PhotoPicker'
 
-const empty: RecipeInput = {
-  title: '', category: '', tags: [], ingredients: [{ name: '', amount: null, unit: '' }],
+// В форме количество ингредиента хранится строкой (чтобы можно было вводить
+// «0,5», «1/2», запятую и т.п.), а при сохранении конвертируется в число.
+interface FormIngredient { name: string; amount: string; unit: string }
+interface FormState {
+  title: string; category: string; tags: string[]
+  ingredients: FormIngredient[]; steps: { text: string }[]
+  rating: number; timeMinutes: number | null; servings: number | null
+  notes: string; isFavorite: boolean
+}
+
+const empty: FormState = {
+  title: '', category: '', tags: [], ingredients: [{ name: '', amount: '', unit: '' }],
   steps: [{ text: '' }], rating: 0, timeMinutes: null, servings: null, notes: '', isFavorite: false,
+}
+
+// «0,5» / «0.5» -> 0.5 ; пусто или мусор -> null
+function parseAmount(raw: string): number | null {
+  const t = raw.trim().replace(',', '.')
+  if (t === '') return null
+  const n = parseFloat(t)
+  return isNaN(n) ? null : n
 }
 
 export default function EditRecipePage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [form, setForm] = useState<RecipeInput>(empty)
+  const [form, setForm] = useState<FormState>(empty)
   const [photo, setPhoto] = useState<Blob>()
   const [categories, setCategories] = useState<Category[]>([])
 
@@ -23,25 +41,44 @@ export default function EditRecipePage() {
   useEffect(() => {
     if (!id) return
     getRecipe(id).then((r) => {
-      if (r) {
-        const { photo: p, id: _id, createdAt, updatedAt, ...rest } = r
-        setForm(rest)
-        setPhoto(p)
-      }
+      if (!r) return
+      const { photo: p } = r
+      setForm({
+        title: r.title, category: r.category, tags: r.tags,
+        ingredients: r.ingredients.length
+          ? r.ingredients.map((i) => ({ name: i.name, amount: i.amount == null ? '' : String(i.amount), unit: i.unit }))
+          : [{ name: '', amount: '', unit: '' }],
+        steps: r.steps.length ? r.steps.map((s) => ({ text: s.text })) : [{ text: '' }],
+        rating: r.rating, timeMinutes: r.timeMinutes, servings: r.servings,
+        notes: r.notes, isFavorite: r.isFavorite,
+      })
+      setPhoto(p)
     })
   }, [id])
 
-  const set = (patch: Partial<RecipeInput>) => setForm((f) => ({ ...f, ...patch }))
-  const setIngredient = (i: number, patch: Partial<Ingredient>) =>
+  const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }))
+  const setIngredient = (i: number, patch: Partial<FormIngredient>) =>
     setForm((f) => ({ ...f, ingredients: f.ingredients.map((ing, j) => j === i ? { ...ing, ...patch } : ing) }))
+  const removeIngredient = (i: number) =>
+    setForm((f) => ({ ...f, ingredients: f.ingredients.filter((_, j) => j !== i) }))
   const setStep = (i: number, text: string) =>
     setForm((f) => ({ ...f, steps: f.steps.map((s, j) => j === i ? { ...s, text } : s) }))
+  const removeStep = (i: number) =>
+    setForm((f) => ({ ...f, steps: f.steps.filter((_, j) => j !== i) }))
 
   async function save() {
-    const data: RecipeInput = { ...form, ingredients: form.ingredients.filter(i => i.name.trim()), steps: form.steps.filter(s => s.text.trim()) }
-    const payload = { ...data, photo }
-    if (id) { await updateRecipe(id, payload); navigate(`/recipe/${id}`) }
-    else { const r = await addRecipe(payload); navigate(`/recipe/${r.id}`) }
+    const payload: RecipeInput & { photo?: Blob } = {
+      title: form.title, category: form.category, tags: form.tags,
+      ingredients: form.ingredients
+        .filter((i) => i.name.trim())
+        .map((i) => ({ name: i.name.trim(), amount: parseAmount(i.amount), unit: i.unit.trim() })),
+      steps: form.steps.filter((s) => s.text.trim()).map((s) => ({ text: s.text })),
+      rating: form.rating, timeMinutes: form.timeMinutes, servings: form.servings,
+      notes: form.notes, isFavorite: form.isFavorite, photo,
+    }
+    // replace:true — после сохранения свайп «назад» ведёт на список, а не обратно в форму.
+    if (id) { await updateRecipe(id, payload); navigate(`/recipe/${id}`, { replace: true }) }
+    else { const r = await addRecipe(payload); navigate(`/recipe/${r.id}`, { replace: true }) }
   }
 
   return (
@@ -83,13 +120,21 @@ export default function EditRecipePage() {
         <div className="flex flex-col gap-2">
           <span className="field-label">Ингредиенты</span>
           {form.ingredients.map((ing, i) => (
-            <div key={i} className="flex gap-2">
+            <div key={i} className="flex gap-2 items-center">
               <input placeholder="Название" className="field flex-1" value={ing.name} onChange={(e) => setIngredient(i, { name: e.target.value })} />
-              <input placeholder="Кол-во" inputMode="decimal" className="field w-20 text-center" value={ing.amount ?? ''} onChange={(e) => setIngredient(i, { amount: e.target.value ? Number(e.target.value) : null })} />
-              <input placeholder="Ед." className="field w-16 text-center" value={ing.unit} onChange={(e) => setIngredient(i, { unit: e.target.value })} />
+              <input placeholder="Кол-во" inputMode="decimal" className="field w-20 text-center" value={ing.amount} onChange={(e) => setIngredient(i, { amount: e.target.value })} />
+              <input placeholder="Ед." className="field w-14 text-center" value={ing.unit} onChange={(e) => setIngredient(i, { unit: e.target.value })} />
+              <button
+                type="button"
+                aria-label="Удалить ингредиент"
+                onClick={() => removeIngredient(i)}
+                className="shrink-0 grid place-items-center w-9 h-9 rounded-chip text-ink-faint hover:text-danger active:scale-90 transition-transform"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </button>
             </div>
           ))}
-          <button type="button" className="text-accent font-semibold text-sm self-start" onClick={() => set({ ingredients: [...form.ingredients, { name: '', amount: null, unit: '' }] })}>+ ингредиент</button>
+          <button type="button" className="text-accent font-semibold text-sm self-start" onClick={() => set({ ingredients: [...form.ingredients, { name: '', amount: '', unit: '' }] })}>+ ингредиент</button>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -98,6 +143,14 @@ export default function EditRecipePage() {
             <div key={i} className="flex gap-2 items-start">
               <span className="shrink-0 grid place-items-center w-7 h-7 rounded-full bg-accent-soft text-accent text-sm font-bold mt-1.5">{i + 1}</span>
               <textarea rows={2} placeholder={`Шаг ${i + 1}`} className="field flex-1 resize-y" value={s.text} onChange={(e) => setStep(i, e.target.value)} />
+              <button
+                type="button"
+                aria-label="Удалить шаг"
+                onClick={() => removeStep(i)}
+                className="shrink-0 grid place-items-center w-9 h-9 mt-1 rounded-chip text-ink-faint hover:text-danger active:scale-90 transition-transform"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </button>
             </div>
           ))}
           <button type="button" className="text-accent font-semibold text-sm self-start" onClick={() => set({ steps: [...form.steps, { text: '' }] })}>+ шаг</button>

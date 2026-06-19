@@ -35,6 +35,11 @@
   html {
     -webkit-text-size-adjust: 100%;
   }
+  html, body {
+    /* Никакого горизонтального «уезжания» страницы вбок */
+    overflow-x: hidden;
+    max-width: 100%;
+  }
   body {
     background-color: var(--bg);
     color: var(--ink);
