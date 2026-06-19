@@ -43,6 +43,12 @@ export async function pushBackup(): Promise<void> {
 let applyingRemote = false
 export function isApplyingRemote(): boolean { return applyingRemote }
 
+// Выполнить запись в БД, не вызывая авто-синхронизацию (для предустановки рецептов).
+export async function suppressSync<T>(fn: () => Promise<T>): Promise<T> {
+  applyingRemote = true
+  try { return await fn() } finally { applyingRemote = false }
+}
+
 export async function pullBackup(): Promise<boolean> {
   const user = await getCurrentUser()
   if (!supabase || !user) return false
