@@ -4,6 +4,7 @@ import { downloadBackup, parseBackupFile, importBackup } from '../db/backup'
 import { getCategories, addCategory, renameCategory, deleteCategory } from '../db/categories'
 import type { Category } from '../db/types'
 import UnitConverter from '../components/UnitConverter'
+import AuthSection from '../components/AuthSection'
 
 export default function SettingsPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -39,6 +40,8 @@ export default function SettingsPage() {
       </header>
 
       <div className="px-4 pb-8 flex flex-col gap-7">
+        <AuthSection />
+
         <section className="flex flex-col gap-3">
           <div>
             <h2 className="section-title">Резервная копия</h2>
