@@ -30,6 +30,11 @@ export async function pushBackup(): Promise<void> {
   } catch { setStatus('error') }
 }
 
+// Пока применяем данные из облака — глушим авто-синхронизацию,
+// иначе запись из pull снова дёрнет Dexie-хуки и уйдёт лишний push (цикл).
+let applyingRemote = false
+export function isApplyingRemote(): boolean { return applyingRemote }
+
 export async function pullBackup(): Promise<boolean> {
   const user = await getCurrentUser()
   if (!supabase || !user) return false
@@ -38,7 +43,9 @@ export async function pullBackup(): Promise<boolean> {
     const { data, error } = await supabase.from('backups').select('data').eq('user_id', user.id).maybeSingle()
     if (error) { setStatus('error'); return false }
     if (!data) { setStatus('synced'); return false }
-    await importBackup(data.data as BackupFile, 'replace')
+    applyingRemote = true
+    try { await importBackup(data.data as BackupFile, 'replace') }
+    finally { applyingRemote = false }
     setStatus('synced')
     return true
   } catch { setStatus('error'); return false }
@@ -58,6 +65,7 @@ export async function syncOnLogin(): Promise<void> {
 
 let timer: ReturnType<typeof setTimeout> | undefined
 export function scheduleSync(): void {
+  if (applyingRemote) return
   clearTimeout(timer)
   timer = setTimeout(() => { void pushBackup() }, 3000)
 }
