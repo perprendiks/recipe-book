@@ -4,17 +4,25 @@ import { getCategories } from '../db/categories'
 import type { Recipe, Category } from '../db/types'
 import RecipeCard from '../components/RecipeCard'
 
+// Фильтры храним в sessionStorage, чтобы они не сбрасывались при возврате
+// со страницы рецепта (например, остаёшься в категории «Салаты»).
+const SS = { q: 'home.query', cat: 'home.cat', fav: 'home.favOnly' }
+
 export default function HomePage() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [query, setQuery] = useState('')
-  const [cat, setCat] = useState<string>('')
-  const [favOnly, setFavOnly] = useState(false)
+  const [query, setQuery] = useState(() => sessionStorage.getItem(SS.q) ?? '')
+  const [cat, setCat] = useState<string>(() => sessionStorage.getItem(SS.cat) ?? '')
+  const [favOnly, setFavOnly] = useState(() => sessionStorage.getItem(SS.fav) === '1')
 
   useEffect(() => {
     getAllRecipes().then(setRecipes)
     getCategories().then(setCategories)
   }, [])
+
+  useEffect(() => { sessionStorage.setItem(SS.q, query) }, [query])
+  useEffect(() => { sessionStorage.setItem(SS.cat, cat) }, [cat])
+  useEffect(() => { sessionStorage.setItem(SS.fav, favOnly ? '1' : '0') }, [favOnly])
 
   const filtered = useMemo(() => recipes.filter((r) =>
     r.title.toLowerCase().includes(query.toLowerCase()) &&

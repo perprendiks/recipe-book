@@ -14,6 +14,7 @@ const mk = (title: string, fav = false) => ({
 })
 
 beforeEach(async () => {
+  sessionStorage.clear() // фильтры сохраняются в sessionStorage — изолируем тесты
   await db.recipes.clear()
   await db.categories.clear()
   await seedCategories()

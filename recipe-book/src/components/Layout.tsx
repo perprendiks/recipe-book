@@ -65,7 +65,7 @@ export default function Layout() {
       <main className="flex-1 pb-[calc(64px+env(safe-area-inset-bottom))]">
         <Outlet />
       </main>
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-surface/95 backdrop-blur-sm border-t border-border flex pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-20 bg-surface border-t border-border shadow-[0_-2px_12px_rgba(0,0,0,0.05)] flex pb-[env(safe-area-inset-bottom)]">
         {tab('/', 'Рецепты', 'recipes')}
         {tab('/add', 'Добавить', 'add')}
         {tab('/shopping', 'Покупки', 'shopping')}

@@ -16,3 +16,10 @@ recipe-book/.vite/
 build-import.mjs
 design-*.png
 check-*.png
+live-site.png
+show-home.png
+rot-*.jpg
+recipes-base.json
+recipe-book-backup-*.json
+rotcheck/
+recipes-final.json
