@@ -46,7 +46,7 @@ export default function HomePage() {
         <div className="relative">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.2-3.2" /></svg>
           <input
-            className="w-full bg-surface border border-border rounded-card pl-10 pr-3 py-3 text-[15px] text-ink placeholder:text-ink-faint focus:border-accent outline-none transition-colors"
+            className="w-full bg-surface border border-border rounded-card pl-10 pr-3 py-3 text-ink placeholder:text-ink-faint focus:border-accent outline-none transition-colors"
             placeholder="Поиск рецептов"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
