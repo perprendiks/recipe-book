@@ -19,7 +19,7 @@ const dataListeners = new Set<() => void>()
 export function onDataChanged(cb: () => void): () => void {
   dataListeners.add(cb); return () => dataListeners.delete(cb)
 }
-function notifyDataChanged() { dataListeners.forEach((l) => l()) }
+export function notifyDataChanged() { dataListeners.forEach((l) => l()) }
 
 export async function localMaxUpdatedAt(): Promise<number> {
   const all = await db.recipes.toArray()
