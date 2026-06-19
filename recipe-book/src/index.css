@@ -59,11 +59,15 @@
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
+  /* 16px — минимум, при котором iOS Safari НЕ зумит страницу при фокусе на поле */
+  input, textarea, select {
+    font-size: 16px;
+  }
 }
 
 @layer components {
   .field {
-    @apply w-full bg-surface border border-border rounded-chip px-3 py-2.5 text-[15px] text-ink placeholder:text-ink-faint outline-none transition-colors;
+    @apply w-full bg-surface border border-border rounded-chip px-3 py-2.5 text-ink placeholder:text-ink-faint outline-none transition-colors;
   }
   .field:focus {
     border-color: var(--accent);
