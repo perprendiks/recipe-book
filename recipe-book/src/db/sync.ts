@@ -13,6 +13,14 @@ export function onSyncStatus(cb: (s: SyncStatus) => void): () => void {
   listeners.add(cb); cb(status); return () => listeners.delete(cb)
 }
 
+// Уведомление UI: локальные данные обновились извне (после загрузки из облака),
+// чтобы открытые экраны перечитали список, а не показывали старое.
+const dataListeners = new Set<() => void>()
+export function onDataChanged(cb: () => void): () => void {
+  dataListeners.add(cb); return () => dataListeners.delete(cb)
+}
+function notifyDataChanged() { dataListeners.forEach((l) => l()) }
+
 export async function localMaxUpdatedAt(): Promise<number> {
   const all = await db.recipes.toArray()
   return all.reduce((m, r) => Math.max(m, r.updatedAt), 0)
@@ -47,6 +55,7 @@ export async function pullBackup(): Promise<boolean> {
     try { await importBackup(data.data as BackupFile, 'replace') }
     finally { applyingRemote = false }
     setStatus('synced')
+    notifyDataChanged()
     return true
   } catch { setStatus('error'); return false }
 }

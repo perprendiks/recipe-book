@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getAllRecipes } from '../db/recipes'
 import { getCategories } from '../db/categories'
+import { onDataChanged } from '../db/sync'
 import type { Recipe, Category } from '../db/types'
 import RecipeCard from '../components/RecipeCard'
 
@@ -16,8 +17,10 @@ export default function HomePage() {
   const [favOnly, setFavOnly] = useState(() => sessionStorage.getItem(SS.fav) === '1')
 
   useEffect(() => {
-    getAllRecipes().then(setRecipes)
-    getCategories().then(setCategories)
+    const load = () => { getAllRecipes().then(setRecipes); getCategories().then(setCategories) }
+    load()
+    // перечитать список, когда данные подтянутся из облака
+    return onDataChanged(load)
   }, [])
 
   useEffect(() => { sessionStorage.setItem(SS.q, query) }, [query])
